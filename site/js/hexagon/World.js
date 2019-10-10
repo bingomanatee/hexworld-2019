@@ -15,7 +15,6 @@ function loopToPolyPoints(loop) {
     .join(' ');
 }
 
-
 export default class World {
   constructor(name, resolution = 0) {
     this.name = name;

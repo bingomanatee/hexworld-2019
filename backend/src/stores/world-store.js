@@ -16,10 +16,10 @@ export default function createWorldStore(logger) {
 
   return {
     async deleteTestData() {
-      const ids = await connect.keys(`${ROOT  }*`);
+      const ids = await connect.keys(`${ROOT}*`);
       try {
-        return Promise.all(ids.map(id => connect.del(id)))
-      } catch(err) {
+        return Promise.all(ids.map(id => connect.del(id)));
+      } catch (err) {
         console.log('error deleting all: ', err);
         return [];
       }
@@ -29,8 +29,11 @@ export default function createWorldStore(logger) {
       logger.debug('Finding worlds');
       let ids = await connect.keys(worldPath('*', 'info'));
 
-      if (Array.isArray(ids)) {
+      if (!Array.isArray(ids)) {
+        console.log('connect - retrieved non array ', ids);
+        return [];
       }
+
       ids = ids.map((id) => {
         const match = new RegExp(`${ROOT}\\/([^/]+)\\/`).exec(id);
         if (match) return match[1];
@@ -38,29 +41,36 @@ export default function createWorldStore(logger) {
       })
         .filter(a => a);
 
-      return Promise.all(ids.map( async (id) => {
+      return Promise.all(ids.map(async (id) => {
         const info = await connect.hgetall(worldPath(id, 'info'));
-        return {id, info};
+        return {
+          id,
+          info
+        };
       }));
     },
 
     async get(id) {
-      logger.debug(`Getting world with id ${id}`)
+      logger.debug(`Getting world with id ${id}`);
       const info = await connect.hgetall(worldPath(id, 'info'));
       const data = await connect.hget(worldPath(id, 'data'));
-      return {info: info || {}, data: data || {}}
+      return {
+        info: info || {},
+        data: data || {}
+      };
     },
 
     async create(record) {
       const info = _.get(record, 'info', {});
       const data = _.get(record, 'data', {});
       const id = uuid();
+      if (!info.name) {
+        throw new Error('no name');
+      }
       try {
-        if (!info.name) {
-          throw new Error('no name');
-        }
         const infoPath = worldPath(id, 'info');
-        await Promise.all(Object.keys(info).map((key) => connect.hset(infoPath, key, info[key])));
+        await Promise.all(Object.keys(info)
+          .map((key) => connect.hset(infoPath, key, info[key])));
 
         await connect.set(worldPath(id, 'data'), JSON.stringify(data));
         logger.debug(`Created new world`);
@@ -69,16 +79,43 @@ export default function createWorldStore(logger) {
         throw err;
       }
 
-      return {...record, id}
+      return {
+        ...record,
+        id
+      };
     },
 
-    async update(id, data) {
-      logger.debug(`Updated world ${id}`, data);
-      return data
+    async update(id, record) {
+      if (!id) throw new Error('id required');
+      const info = _.get(record, 'info', {});
+      const data = _.get(record, 'data', {});
+      if (!info.name) {
+        throw new Error('no name');
+      }
+      try {
+        const infoPath = worldPath(id, 'info');
+        await Promise.all(
+          Object.keys(info)
+            .map((key) => connect.hset(infoPath, key, info[key]))
+        );
+
+        await connect.set(worldPath(id, 'data'), JSON.stringify(data));
+        logger.debug(`Updated world ${id}`);
+      } catch (err) {
+        console.log('update error: ', err);
+        throw err;
+      }
+
+      return {
+        ...record,
+        id
+      };
     },
 
     async remove(id) {
-      logger.debug(`Removed world ${id}`)
+      if (!id) throw new Error('id required');
+      await connect.delete(worldPath(id, 'info'));
+      await connect.delete(worldPath(id, 'data'));
     }
-  }
+  };
 }

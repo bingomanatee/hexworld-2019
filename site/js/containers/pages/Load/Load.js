@@ -9,8 +9,6 @@ import { Schema } from '@wonderlandlabs/schema';
 
 import PageFrame from '../../../views/PageFrame';
 import worldState from '../../../store/worlds.store';
-import CreateGrid from './CreateGrid';
-import ButtonBox from '../../../views/ButtonBox';
 
 export default class Create extends Component {
   constructor(props) {

@@ -91,6 +91,9 @@ export default class Navigation extends PureComponent {
         <NavButton onClick={() => history.push('/')}>
           Home
         </NavButton>
+        <NavButton onClick={() => history.push('/load')}>
+          Load
+        </NavButton>
         <NavButton onClick={() => history.push('/create')}>
           Create
         </NavButton>

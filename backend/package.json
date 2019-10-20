@@ -17,6 +17,7 @@
     "lint": "eslint --fix src && prettier --write \\\"src/**/*.js\\\""
   },
   "dependencies": {
+    "@hapi/hapi": "^18.4.0",
     "@koa/cors": "^2.2.2",
     "awilix": "^4.0.1",
     "awilix-koa": "^3.0.0",

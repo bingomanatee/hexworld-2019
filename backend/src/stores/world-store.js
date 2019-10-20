@@ -47,13 +47,15 @@ export default function createWorldStore(logger) {
           id,
           info
         };
-      }));
+      }))
+        .then((records) => records.filter((record) => !_.get(record, 'info.deleted')))
     },
 
     async get(id) {
       logger.debug(`Getting world with id ${id}`);
       const info = await connect.hgetall(worldPath(id, 'info'));
-      const data = await connect.hget(worldPath(id, 'data'));
+      const data = await connect.get(worldPath(id, 'data'));
+      console.log('data gotten for ', id, data);
       return {
         info: info || {},
         data: data || {}
@@ -113,9 +115,12 @@ export default function createWorldStore(logger) {
     },
 
     async remove(id) {
-      if (!id) throw new Error('id required');
-      await connect.delete(worldPath(id, 'info'));
-      await connect.delete(worldPath(id, 'data'));
+      const info = await connect.hgetall(worldPath(id, 'info'));
+      if (!info) {
+        await connect.del(worldPath(id, 'info'));
+        await connect.del(worldPath(id, 'data'));
+      }
+      await(connect.hset(worldPath(id, 'info'), 'deleted', true));
     }
   };
 }

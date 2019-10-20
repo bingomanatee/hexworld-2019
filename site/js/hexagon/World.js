@@ -16,15 +16,17 @@ function loopToPolyPoints(loop) {
 }
 
 export default class World {
-  constructor(name, resolution = 0) {
+  constructor(name, resolution = 0, heights = null, id = '') {
     this.name = name;
     this.resolution = resolution;
-    this.init();
+    this.id = id;
+    this.init(heights);
     this.paint = _.throttle((n, e) => this._paint(n, e), 100);
+    this.save = _.throttle((...args) => this._save(...args), 2000, { trailing: true });
     console.log('new world: ', this);
   }
 
-  _paint(n, e) {
+  _paint(n) {
     const worldPoint = this.points.get(n);
     if (worldPoint) {
       const height = this.elevationHeight;
@@ -33,9 +35,23 @@ export default class World {
           otherWP.addHeight(height, worldPoint.vertex, this.radius, this.opacity);
         }
       });
+      this.updateHeights();
+      this.save();
     } else {
       console.log('cannot find point ', n);
     }
+  }
+
+  _save() {
+    worldStore.actions.save(this);
+  }
+
+  updateHeights() {
+    this.points.forEach((point) => {
+      const { pointIndex, height } = point;
+      console.log('updating height ', pointIndex, height, 'from ', point);
+      this.heights.set(pointIndex, height);
+    });
   }
 
   get elevationHeight() {
@@ -50,7 +66,7 @@ export default class World {
     }, null).height;
   }
 
-  init() {
+  init(heights) {
     this.model = new IcosahedronGeometry(1, this.resolution);
     this.elevations.push({
       height: 20000,
@@ -94,6 +110,12 @@ export default class World {
       color: [0, 0, 0],
       name: 'bottom',
     });
+
+    if (heights && Array.isArray(heights)) {
+      heights.forEach(([value, index]) => {
+        this.heights.set(index, value);
+      });
+    }
   }
 
   drawSVG(svgRef) {
@@ -117,10 +139,12 @@ export default class World {
 
     try {
       if (height < range.prev.height) {
-        return colorJS(...range.prev.color).css();
+        return colorJS(...range.prev.color)
+          .css();
       }
       if (height > range.next.height) {
-        return colorJS(...range.next.color).css();
+        return colorJS(...range.next.color)
+          .css();
       }
     } catch (err) {
       console.log('error -- eleToColor extremes', err);
@@ -152,7 +176,8 @@ export default class World {
 
     try {
       if (range.match) {
-        return colorJS(...range.match.color).css();
+        return colorJS(...range.match.color)
+          .css();
       }
     } catch (err) {
       console.log('error- eleToColor - match', err);
@@ -163,7 +188,8 @@ export default class World {
       const nextColor = colorJS(...range.next.color);
       const diff = range.next.height - range.prev.height;
       const extent = height - range.prev.height;
-      return colorJS.mix(prevColor, nextColor, extent / diff).css();
+      return colorJS.mix(prevColor, nextColor, extent / diff)
+        .css();
     } catch (err) {
       console.log('error- eleToColor - mix', err);
       return '#999999';
@@ -185,10 +211,18 @@ export default class World {
     }
   }
 
-  areas(size) {
+  areas() {
     const areas = [
-      { name: 'label-head', start: [0, 0], end: [1, 0] },
-      { name: 'value-head', start: [2, 0], end: [3, 0] },
+      {
+        name: 'label-head',
+        start: [0, 0],
+        end: [1, 0],
+      },
+      {
+        name: 'value-head',
+        start: [2, 0],
+        end: [3, 0],
+      },
     ];
     this.sortedElevations.forEach((e, i) => {
       areas.push({
@@ -229,7 +263,10 @@ export default class World {
       const yb = _.get(this, 'size2D.height', 0);
 
       const bbox = {
-        xl: 0, xr, yt: 0, yb,
+        xl: 0,
+        xr,
+        yt: 0,
+        yb,
       }; // xl is x-left, xr is x-right, yt is y-top, and yb is y-bottom
 
       const points2D = this.model.vertices.map((vertex, i) => {
@@ -275,7 +312,10 @@ export default class World {
             const polyPoints = loopToPolyPoints(poly.loop());
             const index = cell.site.pointIndex;
             const drawnPoly = draw.polygon(polyPoints)
-              .stroke({ width: 1, color: 'black' })
+              .stroke({
+                width: 1,
+                color: 'black',
+              })
               .attr({ id: `shape-for-point-${index}` });
             worldPoint.poly = drawnPoly;
           } catch (err) {
@@ -285,10 +325,25 @@ export default class World {
       });
     }
   }
+
+  toJSON() {
+    const info = {
+      name: this.name,
+      resolution: this.resolution,
+    };
+    const data = Array.from(this.heights.entries());
+
+    return {
+      info,
+      data,
+      id: this.id || '',
+    };
+  }
 }
 
 propper(World)
   .addProp('svgRef')
+  .addProp('id', '')
   .addProp('opacity', {
     defaultValue: 0.5,
     onChange(value) {

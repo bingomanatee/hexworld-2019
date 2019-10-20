@@ -12,6 +12,7 @@ import MainGrid from './MainGrid';
 import Home from '../pages/Home';
 import Create from '../pages/Create';
 import Beta from '../pages/Home';
+import Load from '../pages/Load';
 import World from '../pages/World';
 import theme from '../../theme.js';
 
@@ -34,10 +35,11 @@ export default class Main extends PureComponent {
             <Box gridArea="nav">
               <Navigation/>
             </Box>
-            <Box gridArea="main">
+            <Box id="main" gridArea="main" style={({overflow: 'auto'})}>
               <Content>
                 <Switch>
                   <Route path="/" exact component={Home}/>
+                  <Route path="/load" component={Load}/>
                   <Route path="/create" component={Create}/>
                   <Route path="/beta" component={Beta}/>
                   <Route path="/world/:name" component={World}/>

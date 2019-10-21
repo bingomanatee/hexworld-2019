@@ -5,7 +5,6 @@ import _ from 'lodash';
 export default ({ children, world }) => (
   <ResponsiveContext.Consumer>
     {(size) => {
-      console.log('areas:', world.areas());
       const rows = _.range(0, world.elevations.length).map(() => 'auto');
       switch (size) {
         default:

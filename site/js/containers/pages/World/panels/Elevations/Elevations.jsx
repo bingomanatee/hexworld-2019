@@ -8,14 +8,25 @@ import ElevationGrid from './ElevationGrid';
 import SvgColorPip from './SvgColorPip';
 
 export default class Elevations extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { activeElevation: false, world: false };
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    if (!prevProps.world && this.props.world) {
+      this.setState({ activeElevation: this.props.world.activeElevation });
+    }
+  }
+
   render() {
     const { world } = this.props;
-    const { elevations } = world;
 
+    if (!world) return '';
 
     return (
       <ElevationGrid world={world}>
-        {elevations.map((elevation, i) => (
+        {world.elevations.map((elevation, i) => (
           <>
             <Box
               direction="row"
@@ -23,7 +34,11 @@ export default class Elevations extends Component {
               gridArea={`pip-${i}`}
               margin="0"
               pad="0"
-              onClick={(e) => world.setActiveElevation(elevation, e)}
+              onClick={(e) => {
+                world.setActiveElevation(elevation);
+                this.setState({ activeElevation: elevation });
+                console.log('active elevation:', elevation);
+              }}
             >
               <span style={({ color: `rgb(${elevation.color.join(',')})` })}>
                 <SvgColorPip active={elevation.name === world.currentElevation} />

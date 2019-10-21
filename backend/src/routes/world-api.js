@@ -23,6 +23,7 @@ export default createController(api)
   .get('', 'findWorlds')
   .get('/:id', 'getWorld')
   .post('', 'createWorld')
+  .put('/:id','updateWorld')
   .patch('/:id', 'updateWorld')
   .delete('/:id', 'removeWorld')
   .delete('/:id/testdata', 'deleteTestData');

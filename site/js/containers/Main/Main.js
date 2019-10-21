@@ -42,7 +42,7 @@ export default class Main extends PureComponent {
                   <Route path="/load" component={Load}/>
                   <Route path="/create" component={Create}/>
                   <Route path="/beta" component={Beta}/>
-                  <Route path="/world/:name" component={World}/>
+                  <Route path="/world/:id" component={World}/>
                   <Route component={Home}/>
                 </Switch>
               </Content>

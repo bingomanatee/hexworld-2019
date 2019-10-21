@@ -1,4 +1,5 @@
 import axios from 'axios';
+import _ from 'lodash';
 import { Store } from '@wonderlandlabs/looking-glass-engine';
 import { World } from '../hexagon';
 
@@ -29,6 +30,28 @@ const WorldStore = new Store({
       actions.setWorlds(state.worlds);
     },
 
+    async fetch(store, id) {
+      try {
+        const { data } = await axios.get(`${API_URL}/worlds/${id}`);
+        // @TODO: examine schema
+        console.log('fetch', id, 'data ---', data);
+        let heights = _.get(data, 'data');
+        const { info } = data;
+        try {
+          heights = JSON.parse(heights);
+          const world = new World(info.name, Number.parseInt(info.resolution, 10), heights, id);
+          store.state.worlds.set(id, world);
+          await store.actions.setWorlds(store.state.worlds);
+          console.log('updated world', id, 'with heights', heights);
+        } catch (err) {
+          console.log('set worlds error', err);
+        }
+      } catch (err) {
+        console.log('bad fetch', err);
+      }
+      console.log('fetch done');
+    },
+
     async load({ state, actions }, purge = false) {
       const worlds = purge ? new Map() : state.worlds;
       const { data } = await axios.get(`${API_URL}/worlds`);
@@ -41,18 +64,23 @@ const WorldStore = new Store({
       actions.setWorlds(worlds);
     },
     async save(store, world) {
+      console.log('saving ', world.id, world.toJSON());
       let result;
-      if (world.id) {
-        result = await axios.put(`${API_URL}/worlds/${world.id}`, world.toJSON());
-      } else {
-        result = await axios.post(`${API_URL}/worlds`, world.toJSON());
+      try {
+        if (world.id) {
+          result = await axios.put(`${API_URL}/worlds/${world.id}`, world.toJSON());
+        } else {
+          result = await axios.post(`${API_URL}/worlds`, world.toJSON());
+          console.log('save result: ', result);
+          const id = _.get(result, 'data.id');
+
+          // eslint-disable-next-line no-param-reassign
+          if (id) world.id = id;
+        }
+      } catch (err) {
+        console.log('error saving', err);
       }
-
       console.log('save result: ', result);
-      const id = _.get(result, 'data.id');
-
-      // eslint-disable-next-line no-param-reassign
-      if (id) world.id = id;
     },
 
     async deleteWorld(store, world) {

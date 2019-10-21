@@ -7,8 +7,6 @@ import colorJS from 'chroma-js';
 import Polygon from './Polygon';
 import WorldPoint from './WorldPoint';
 
-import worldStore from '../store/worlds.store';
-
 function loopToPolyPoints(loop) {
   loop.push(_.first(loop));
   return loop.map(({ x, y }) => `${Math.round(x)},${Math.round(y)}`)
@@ -22,8 +20,6 @@ export default class World {
     this.id = id;
     this.init(heights);
     this.paint = _.throttle((n, e) => this._paint(n, e), 100);
-    this.save = _.throttle((...args) => this._save(...args), 2000, { trailing: true });
-    console.log('new world: ', this);
   }
 
   _paint(n) {
@@ -36,26 +32,20 @@ export default class World {
         }
       });
       this.updateHeights();
-      this.save();
     } else {
       console.log('cannot find point ', n);
     }
   }
 
-  _save() {
-    worldStore.actions.save(this);
-  }
-
   updateHeights() {
     this.points.forEach((point) => {
       const { pointIndex, height } = point;
-      console.log('updating height ', pointIndex, height, 'from ', point);
       this.heights.set(pointIndex, height);
     });
   }
 
   get elevationHeight() {
-    return this.elevations.reduce((match, candidate) => {
+    const ele = this.elevations.reduce((match, candidate) => {
       if (match) {
         return match;
       }
@@ -63,7 +53,13 @@ export default class World {
         return candidate;
       }
       return null;
-    }, null).height;
+    }, null);
+
+    if (!ele) {
+      console.log('cannot find ', this.currentElevation);
+      return 0;
+    }
+    return ele.height;
   }
 
   init(heights) {
@@ -111,9 +107,15 @@ export default class World {
       name: 'bottom',
     });
 
-    if (heights && Array.isArray(heights)) {
-      heights.forEach(([value, index]) => {
-        this.heights.set(index, value);
+    if (heights && _.isObject(heights)) {
+      Object.keys(heights).forEach((key) => {
+        const keyInt = Number.parseInt(key, 10);
+        if (_.isNumber(keyInt)) {
+          const value = Number.parseInt(heights[key], 10);
+          if (_.isNumber(value)) {
+            this.heights.set(keyInt, value);
+          }
+        }
       });
     }
   }
@@ -121,10 +123,6 @@ export default class World {
   drawSVG(svgRef) {
     this.svgRef = svgRef;
     this.draw2D();
-  }
-
-  refresh() {
-    worldStore.actions.updateWorld(this);
   }
 
   eleToColor(height) {
@@ -200,14 +198,11 @@ export default class World {
     if (e) {
       e.preventDefault();
     }
-    if (_.isObject(ele)) {
-      if ('name' in ele) {
-        this.setActiveElevation(ele.name);
-      }
-    } else {
+    if (_.isObject(ele) && 'name' in ele) {
+      this.currentElevation = ele.name;
       console.log('setting current elevation', ele);
-      this.currentElevation = ele;
-      this.refresh();
+    } else {
+      console.log('cannot set ele', ele);
     }
   }
 
@@ -331,7 +326,10 @@ export default class World {
       name: this.name,
       resolution: this.resolution,
     };
-    const data = Array.from(this.heights.entries());
+    const data = {};
+    this.heights.forEach((value, key) => {
+      data[key] = Math.round(value);
+    });
 
     return {
       info,

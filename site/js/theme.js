@@ -55,7 +55,7 @@ export default {
       "status-critical": "#FF4040",
       "status-error": "#FF4040",
       "status-warning": "#FFAA15",
-      "status-ok": "#00C781",
+      "status-ok": "#006b35",
       "status-unknown": "#CCCCCC",
       "status-disabled": "#CCCCCC",
       "background": "#ffffff"

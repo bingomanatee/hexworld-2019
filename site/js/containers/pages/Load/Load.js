@@ -5,13 +5,15 @@ import {
 import {
   Text, TextInput, Box, RangeInput, Button, DataTable, Stack,
 } from 'grommet';
+import _ from 'lodash';
+
 import styled from 'styled-components';
 import { Schema } from '@wonderlandlabs/schema';
 
 import PageFrame from '../../../views/PageFrame';
 import worldState from '../../../store/worlds.store';
 
-const Centered = styled.div `
+const Centered = styled.div`
 width: 100%;
 height: 100%;
 display: flex;
@@ -19,7 +21,14 @@ justify-content: center;
 align-items: center;
 `;
 
-const COLUMNS = [
+const Clamp = styled.div`
+width: 200px;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+`;
+
+const getColumns = ({ loadWorld, deleteWorld }) => [
   {
     property: 'id',
     primary: true,
@@ -29,7 +38,7 @@ const COLUMNS = [
       if (!world.id) {
         return 'new';
       }
-      return world.id;
+      return <Clamp>{world.id}</Clamp>;
     },
   },
   {
@@ -43,7 +52,29 @@ const COLUMNS = [
     header: 'Res',
   },
   {
-    property: 'id',
+    property: 'id2',
+    sortable: false,
+    extend: { width: 200 },
+    render(world) {
+      return (
+        <Centered>
+          <Box
+            direction="row"
+            round="small"
+            pad="xsmall"
+            fill={false}
+            background="status-ok"
+            justify="center"
+            onClick={() => loadWorld(world)}
+          >
+            <span>Load</span>
+          </Box>
+        </Centered>
+      );
+    },
+  },
+  {
+    property: 'id3',
     sortable: false,
     render(world) {
       return (
@@ -55,7 +86,7 @@ const COLUMNS = [
             fill={false}
             background="status-error"
             justify="center"
-            onClick={() => worldState.actions.deleteWorld(world)}
+            onClick={() => deleteWorld(world)}
           >
             <span>&times;</span>
             <span>&nbsp;</span>
@@ -135,11 +166,20 @@ export default class Create extends Component {
     const initial = this.schema.instance();
     initial.resolution = 1;
     const list = worlds instanceof Map ? Array.from(worlds.values()) : [];
+    const columns = getColumns({
+      loadWorld: (world) => {
+        console.log('loading world', world);
+        history.push(_.get(world, 'id') ? `/world/${_.get(world, 'id')}` : '/');
+      },
+      deleteWorld: (world) => {
+        worldState.actions.deleteWorld(world);
+      },
+    });
+
     return (
       <PageFrame>
         <h1>Load a saved world</h1>
-
-        <DataTable data={list || []} sortable columns={COLUMNS} style={({ width: '100%' })} />
+        <DataTable data={list || []} sortable columns={columns} style={({ width: '100%' })} />
       </PageFrame>
     );
   }

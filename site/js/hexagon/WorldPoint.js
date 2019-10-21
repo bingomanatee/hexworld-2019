@@ -5,12 +5,19 @@ import _ from 'lodash';
 export default class WorldPoint {
   constructor(props) {
     Object.assign(this, props);
+    if (this.world.heights.has(this.pointIndex)) {
+      this.height = this.world.heights.get(this.pointIndex);
+    }
   }
 
   shadeToColor() {
     if (this.poly) {
+      console.log('shadeToColor filling');
       const height = _.clamp(this.height, -20000, 20000);
       const color = this.world.eleToColor(height);
+      if (height !== -100) {
+        console.log('height: ', height, 'color: ', color);
+      }
       this.poly.fill(color);
     }
   }

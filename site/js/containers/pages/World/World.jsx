@@ -6,26 +6,16 @@ import _ from 'lodash';
 import WorldGrid from './WorldGrid';
 import worldStore from '../../../store/worlds.store';
 import DrawWorld from './DrawWorld';
-import { World } from '../../../hexagon';
 
 import Elevations from './panels/Elevations';
 import Brushes from './panels/Brush';
-
-const panelBorder = {
-  width: '2px',
-  radius: 0,
-  color: 'red',
-};
 
 export default class WorldPage extends Component {
   constructor(props) {
     const { match } = props;
     super(props);
-    const name = _.get(match, 'params.name');
-
-    const world = worldStore.state.worlds.get(name);
-
-    this.state = { world };
+    const id = _.get(match, 'params.id');
+    this.state = { world: false, id };
   }
 
   componentWillUnmount() {
@@ -38,6 +28,23 @@ export default class WorldPage extends Component {
     }, (err) => {
       console.log('worldStore error: ', err);
     });
+
+    worldStore.actions.fetch(this.state.id)
+      .then(() => {
+        if (!worldStore.state.worlds.has(this.state.id)) {
+          console.log('=========== world does not have ', this.state.id);
+          this.props.history.push('/');
+        } else {
+          const store = worldStore;
+          const world = worldStore.state.worlds.get(this.state.id);
+          this.setState({ world });
+        }
+      })
+      .catch((err) => {
+        console.log('error fetching', this.state.id, err);
+        console.log('========== world pushing away ', this.state.id);
+        this.props.history.push('/');
+      });
   }
 
   getSnapshotBeforeUpdate(prevProps, prevState) {
@@ -58,21 +65,12 @@ export default class WorldPage extends Component {
   }
 
   render() {
-    const { world } = this.state;
-    if (!world) {
-      this.props.history.push('/');
-      return '';
-    }
+    const { world, id } = this.state;
     return (
       <WorldGrid>
         <Box gridArea="header" pad="medium">
           <Text size="medium" weight="bold">
-            World
-            {' '}
-            {`"${world.name}"`}
-            (res:
-            {world.resolution}
-            )
+            {world ? `Editing world ${world.name}(${world.id})` : `loading world ${id}`}
           </Text>
         </Box>
         <Box gridArea="editor">

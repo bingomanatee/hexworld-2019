@@ -11,11 +11,26 @@ export default class Brushes extends Component {
   constructor(props) {
     super(props);
     const { world } = props;
-    this.state = { opacity: world.opacity, radius: world.radius };
+    this.state = { opacity: 0, radius: 0 };
+  }
+
+  componentDidUpdate() {
+    const { world, opacity } = this.state;
+
+    if (opacity === 0 && world) {
+      this.setState({ opacity: world.opacity, radius: world.radius });
+    }
+  }
+
+  componentDidMount() {
+    if (this.state.world) {
+      this.initState();
+    }
   }
 
   render() {
     const { world } = this.props;
+    if (!world) return '';
     const { opacity, radius } = this.state;
     return (
       <BrushGrid world={world}>

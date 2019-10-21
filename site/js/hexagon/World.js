@@ -351,6 +351,10 @@ propper(World)
   .addProp('radius', {
     defaultValue: 0.1,
   })
+  .addProp('paintMode', {
+    type: 'boolean',
+    defaultValue: true,
+  })
   .addProp('name', {
     type: 'string',
     defaultValue: '',

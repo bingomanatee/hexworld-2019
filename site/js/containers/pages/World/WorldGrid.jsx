@@ -31,7 +31,7 @@ export default ({children}) => (
         default:
           return (
             <Grid
-              rows={['4rem', '2fr', '1fr']}
+              rows={['4rem', '1fr', '1fr']}
               columns={['auto', '14rem']}
               gap="small"
               pad="small"

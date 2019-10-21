@@ -12,9 +12,8 @@ import Brushes from './panels/Brush';
 
 export default class WorldPage extends Component {
   constructor(props) {
-    const { match } = props;
     super(props);
-    const id = _.get(match, 'params.id');
+    const id = _.get(props, 'match.params.id');
     this.state = { world: false, id };
   }
 
@@ -29,13 +28,12 @@ export default class WorldPage extends Component {
       console.log('worldStore error: ', err);
     });
 
+    worldStore.actions.setEditedPoint(false);
     worldStore.actions.fetch(this.state.id)
       .then(() => {
         if (!worldStore.state.worlds.has(this.state.id)) {
-          console.log('=========== world does not have ', this.state.id);
           this.props.history.push('/');
         } else {
-          const store = worldStore;
           const world = worldStore.state.worlds.get(this.state.id);
           this.setState({ world });
         }
@@ -48,9 +46,9 @@ export default class WorldPage extends Component {
   }
 
   getSnapshotBeforeUpdate(prevProps, prevState) {
-    const newWorldName = _.get(this, 'props.match.params.name');
-    if (this.state.world.name !== newWorldName) {
-      return worldStore.state.worlds.get(newWorldName);
+    const id = _.get(this, 'props.match.params.id');
+    if (this.state.world.id !== id) {
+      return worldStore.state.worlds.get(id);
     }
     return null;
   }
@@ -61,6 +59,12 @@ export default class WorldPage extends Component {
     // (snapshot here is the value returned from getSnapshotBeforeUpdate)
     if (world) {
       this.setState({ world });
+    } else world = this.state.world;
+
+    console.log('this.state.editedPoint', this.state.editedPoint);
+    if (this.state.editedPoint) {
+      const { pointIndex, worldId } = this.state.editedPoint;
+      this.props.history.push(`/world/${worldId}/${pointIndex}`);
     }
   }
 

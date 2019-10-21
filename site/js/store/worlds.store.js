@@ -1,7 +1,6 @@
 import axios from 'axios';
 import _ from 'lodash';
 import { Store } from '@wonderlandlabs/looking-glass-engine';
-import { World } from '../hexagon';
 
 // eslint-disable-next-line prefer-destructuring
 const API_URL = process.env.API_URL;
@@ -9,28 +8,34 @@ console.log('----- API_URL:', API_URL);
 
 const WorldStore = new Store({
   actions: {
-    async addWorld({ actions, state }, { name, resolution }) {
-      const { worlds } = state;
-      const world = new World(name, resolution);
+    async addWorld(store, { name, resolution }) {
+      const { actions, state } = store;
+      const { worlds, WorldClass } = state;
+      const world = new WorldClass(name, resolution);
+      world.store = store;
       worlds.set(name, world);
 
       axios.post(`${API_URL}/worlds`, world.toJSON());
 
       actions.setWorlds(worlds);
     },
-    updateWorld({ actions, state }, world) {
-      console.log('updating world', world);
-      state.worlds.forEach((_, name) => {
-        if (state.worlds.get(name) === world) {
-          state.worlds.delete(name);
-        }
-      });
+    defineWorldClass(store, World) {
+      store.actions.setWorldClass(World);
+      World.store = store;
+      console.log('worldClass set to ', World);
+    },
 
-      state.worlds.set(world.name, world);
+    updateWorld({ actions, state }, world) {
+      state.worlds.set(world.id, world);
       actions.setWorlds(state.worlds);
     },
 
+    editWorldPoint(store, pointIndex, worldId) {
+      store.actions.setEditedPoint({ pointIndex, worldId });
+    },
+
     async fetch(store, id) {
+      const World = store.state.WorldClass;
       try {
         const { data } = await axios.get(`${API_URL}/worlds/${id}`);
         // @TODO: examine schema
@@ -40,6 +45,7 @@ const WorldStore = new Store({
         try {
           heights = JSON.parse(heights);
           const world = new World(info.name, Number.parseInt(info.resolution, 10), heights, id);
+          world.store = store;
           store.state.worlds.set(id, world);
           await store.actions.setWorlds(store.state.worlds);
           console.log('updated world', id, 'with heights', heights);
@@ -52,12 +58,18 @@ const WorldStore = new Store({
       console.log('fetch done');
     },
 
-    async load({ state, actions }, purge = false) {
+    async load(store, purge = false) {
+      const { state, actions } = store;
+      const World = state.WorldClass;
+      if (!World) {
+        return;
+      }
       const worlds = purge ? new Map() : state.worlds;
       const { data } = await axios.get(`${API_URL}/worlds`);
       if (Array.isArray(data)) {
         data.forEach(({ id, data, info }) => {
           const world = new World(info.name, Number.parseInt(info.resolution, 10), data, id);
+          world.store = store;
           worlds.set(world.id, world);
         });
       }
@@ -94,6 +106,8 @@ const WorldStore = new Store({
     },
   },
 })
+  .addProp('WorldClass')
+  .addProp('editedPoint')
   .addProp('worlds', {
     start: new Map(),
   });

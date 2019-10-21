@@ -12,7 +12,7 @@ export default ({ children, world }) => (
           return (
             <Grid
               columns={[['2rem', '4rem'], 'auto', '2rem', '4px']}
-              rows={['2rem', ['3rem', '1fr'], ['3rem', '1fr']]}
+              rows={['2rem', ['3rem', '1fr'], ['3rem', '1fr'], ['3rem', '1fr']]}
               gap="none"
               pad="2px"
               margin="small"
@@ -25,6 +25,9 @@ export default ({ children, world }) => (
                 { name: 'label-radius', start: [0, 2], end: [0, 2] },
                 { name: 'control-radius', start: [1, 2], end: [1, 2] },
                 { name: 'value-radius', start: [2, 2], end: [2, 2] },
+                { name: 'label-mode', start: [0, 3], end: [0, 3] },
+                { name: 'control-mode', start: [1, 3], end: [1, 3] },
+                { name: 'value-mode', start: [2, 3], end: [2, 3] },
               ]}
             >
               <Box gridArea="label" className="panel-label">Brush</Box>
@@ -38,7 +41,7 @@ export default ({ children, world }) => (
           return (
             <Grid
               columns={['auto']}
-              rows={['2rem', ['3rem', '1fr'], ['3rem', '1fr'], ['3rem', '1fr'], ['3rem', '1fr'], ['3rem', '1fr'], ['3rem', '1fr']]}
+              rows={['2rem', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto'] }
               gap="none"
               pad="2px"
               margin="small"
@@ -51,6 +54,9 @@ export default ({ children, world }) => (
                 { name: 'label-radius', start: [0, 4], end: [0, 4] },
                 { name: 'control-radius', start: [0, 5], end: [0, 5] },
                 { name: 'value-radius', start: [0, 6], end: [0, 6] },
+                { name: 'label-mode', start: [0, 7], end: [0, 7] },
+                { name: 'control-mode', start: [0, 8], end: [0, 8] },
+                { name: 'value-mode', start: [0, 9], end: [0, 9] },
               ]}
             >
               <Box gridArea="label" className="panel-label">Brush</Box>

@@ -1,6 +1,6 @@
 /* eslint-disable no-return-assign */
 import {
-  Text, RangeInput, Box, Button,
+  Text, RangeInput, Box, Button, CheckBox,
 } from 'grommet';
 import React, { Component } from 'react';
 import _ from 'lodash';
@@ -11,14 +11,20 @@ export default class Brushes extends Component {
   constructor(props) {
     super(props);
     const { world } = props;
-    this.state = { opacity: 0, radius: 0 };
+    this.state = {
+      opacity: 0,
+      radius: 0,
+    };
   }
 
   componentDidUpdate() {
     const { world, opacity } = this.state;
 
     if (opacity === 0 && world) {
-      this.setState({ opacity: world.opacity, radius: world.radius });
+      this.setState({
+        opacity: world.opacity,
+        radius: world.radius,
+      });
     }
   }
 
@@ -32,6 +38,7 @@ export default class Brushes extends Component {
     const { world } = this.props;
     if (!world) return '';
     const { opacity, radius } = this.state;
+    console.log('world paint mode: ', world.paintMode);
     return (
       <BrushGrid world={world}>
         <Box gridArea="label-op">
@@ -59,10 +66,10 @@ export default class Brushes extends Component {
         <Box gridArea="control-radius">
           <RangeInput
             onChange={(e) => {
-              const radius = _.get(e, 'target.value', 0.5);
-              console.log('radius change: ', e, radius);
-              world.radius = Number(radius);
-              this.setState({ radius });
+              const r = _.get(e, 'target.value', 0.5);
+              console.log('radius change: ', e, r);
+              world.radius = Number(r);
+              this.setState({ radius: r });
             }}
             min={0.02}
             max={0.3}
@@ -72,6 +79,22 @@ export default class Brushes extends Component {
         </Box>
         <Box gridArea="value-radius">
           <Text size="small">{world.radius}</Text>
+        </Box>
+        <Box gridArea="label-mode">
+          <Text size="small" weight="bold">Mode</Text>
+        </Box>
+        <Box gridArea="control-mode" direction="row" alignContent="center" algin={"center"}>
+          <Box margin="small"><CheckBox
+            label={false}
+            checked={world.paintMode}
+            onChange={() => {
+              world.paintMode = !world.paintMode;
+              this.setState({ paintMode: world.paintMode });
+            }}
+            toggle="true"
+          />
+          </Box>
+          <Text margin="small">{world.paintMode ? 'Paint' : 'Select'}</Text>
         </Box>
       </BrushGrid>
     );

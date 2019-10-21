@@ -12,12 +12,8 @@ export default class WorldPoint {
 
   shadeToColor() {
     if (this.poly) {
-      console.log('shadeToColor filling');
       const height = _.clamp(this.height, -20000, 20000);
       const color = this.world.eleToColor(height);
-      if (height !== -100) {
-        console.log('height: ', height, 'color: ', color);
-      }
       this.poly.fill(color);
     }
   }
@@ -63,9 +59,21 @@ propper(WorldPoint)
     onChange(value, old) {
       if (value) {
         this.shadeToColor();
+        value.mousedown((e) => {
+          const paintMode = _.get(this, 'world.paintMode');
+          const worldId = _.get(this, 'world.id');
+          const store = _.get(this, 'world.store');
+          const pointId = this.pointIndex;
+          console.log('down', paintMode, 'store', store, 'worldId:', worldId, 'pointIndex:', pointId);
+          if (!paintMode && store) {
+            store.actions.setEditedPoint({ pointId, worldId });
+          } else console.log('no store');
+        });
         value.mousemove((e) => {
           if (e.buttons === 1) {
-            this.world.paint(this.pointIndex, e);
+            if (this.world.paintMode) {
+              this.world.paint(this.pointIndex, e);
+            }
           }
         });
       }

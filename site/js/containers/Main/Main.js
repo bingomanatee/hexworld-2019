@@ -9,9 +9,6 @@ import worldStore from '../../store/worlds.store';
 import MainGrid from './MainGrid';
 import { World } from '../../hexagon';
 import theme from '../../theme';
-
-console.log('defining world class:', World);
-worldStore.actions.defineWorldClass(World);
 // pages
 
 import Home from '../pages/Home';
@@ -20,6 +17,8 @@ import Load from '../pages/Load';
 import WorldPage from '../pages/World';
 import HexPage from '../pages/HexPage';
 
+console.log('defining world class:', World);
+worldStore.actions.defineWorldClass(World);
 
 
 export default class Main extends PureComponent {
@@ -45,7 +44,7 @@ export default class Main extends PureComponent {
                   <Route path="/load" component={Load} />
                   <Route path="/create" component={Create} />
                   <Route path="/world/:id" exact component={WorldPage} />
-                  <Route path="/world/:id/:pointId" exact component={HexPage} />
+                  <Route path="/world/:worldId/:pointId" exact component={HexPage} />
                   <Route component={Home} />
                 </Switch>
               </Content>

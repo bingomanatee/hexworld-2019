@@ -63,10 +63,10 @@ propper(WorldPoint)
           const paintMode = _.get(this, 'world.paintMode');
           const worldId = _.get(this, 'world.id');
           const store = _.get(this, 'world.store');
-          const pointId = this.pointIndex;
-          console.log('down', paintMode, 'store', store, 'worldId:', worldId, 'pointIndex:', pointId);
+          const { pointIndex } = this;
+          // console.log('down', paintMode, 'store', store, 'worldId:', worldId, 'pointIndex:', pointIndex);
           if (!paintMode && store) {
-            store.actions.setEditedPoint({ pointId, worldId });
+            store.actions.setEditedPoint({ pointIndex, worldId });
           } else console.log('no store');
         });
         value.mousemove((e) => {

@@ -12,10 +12,14 @@
     "staticPath": "static",
     "watcherGlob": "**"
   },
+  "jest": {
+    "testPathIgnorePatterns": ["/backend/"]
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@flatten-js/core": "^1.0.17",
     "@wonderlandlabs/looking-glass-engine": "^2.0.7",
     "@wonderlandlabs/propper": "^2.0.5",
     "@wonderlandlabs/schema": "^1.0.0",
@@ -32,6 +36,7 @@
     "is_js": "^0.9.0",
     "lodash": "^4.17.15",
     "parcel-bundler": "^1.12.3",
+    "pixi.js": "^5.1.5",
     "react": "^16.10.1",
     "react-dom": "^16.10.1",
     "react-router-dom": "^5.0.1",

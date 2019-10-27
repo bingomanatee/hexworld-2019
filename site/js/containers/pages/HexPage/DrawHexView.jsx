@@ -32,6 +32,7 @@ export default withSize({
     }
 
     componentDidMount() {
+      this.draw();
     }
 
     componentDidUpdate() {
@@ -42,11 +43,11 @@ export default withSize({
       this.draw();
     }
 
-    draw(ref) {
-      if (ref) this.svgElement = ref;
-      if (this.svgElement) {
-        this.submapDrawer.draw(ref, this.props.size);
-      }
+    draw() {
+      console.log('DrawHexView: drawing with ', this.svgRef);
+      const current = _.get(this, 'svgRef.current');
+      if (!current) return;
+      this.submapDrawer.draw(current, this.props.size);
     }
 
     _data() {
@@ -98,9 +99,9 @@ export default withSize({
 
     render() {
       return (
-        <div>
-          <svg ref={(ref) => this.draw(ref)} />
-        </div>
+        <Box fill>
+          <svg ref={this.svgRef} />
+        </Box>
       );
     }
   },

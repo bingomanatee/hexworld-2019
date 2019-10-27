@@ -16,9 +16,7 @@ export default class Perimeter {
       }))
       .filter((list) => list.points.includes(this.pointIndex));
 
-    console.log('vertices:', verts);
     this._edges = verts.map(({ points }) => _.difference(points, [this.pointIndex]));
-    console.log('edges:', this._edges);
     return this._edges;
   }
 
@@ -32,7 +30,6 @@ export default class Perimeter {
       v.s = v.toArray()
         .map((a) => Math.round(100 * a));
     });
-    console.log('computing points for ', this.drawer, this.pointIndex, 'dpi:', this.drawer.pointIndex);
 
     let edges = [...this.edges];
     if (!edges.length) {
@@ -56,15 +53,12 @@ export default class Perimeter {
         break;
       }
     }
-    console.log('point indexes: =========== >', points);
 
     const pointLinks = points.map((p, i) => [this.vertices[p], this.vertices[points[(i + 1) % points.length]]]);
 
-    console.log('point links ===========>: ', pointLinks);
     const triangles = pointLinks.map(([a, b]) => new Triangle(a, b, this.point));
 
     this.points = triangles.map((t) => t.getMidpoint(new Vector3()));
-    console.log('points: ', this.points);
   }
 
   get vertices() {
@@ -81,18 +75,19 @@ export default class Perimeter {
 
   get plane() {
     if (!this._plane) {
-      const a = new Object3D();
-      a.lookAt(this.point);
-      a.updateMatrix();
-      this._plane = new Object3D();
-      a.attach(this._plane);
+      const inner = new Object3D();
+      inner.lookAt(this.point);
+      inner.updateMatrix();
+      const root = new Object3D();
+      root.attach(inner);
+      this._plane = inner;
       this._plane.updateWorldMatrix();
     }
     return this._plane;
   }
 
   get flatPoints() {
-    return this.points.map((point) => this.plane.worldToLocal(point.clone()));
+    return this.points.map((point) => this.plane.localToWorld(point.clone()));
   }
 
   get north() {

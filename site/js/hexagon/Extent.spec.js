@@ -27,6 +27,7 @@ describe('Extent', () => {
 
     it('should have the right points', () => {
       const boxedPoints = trapBox.fitToBox(new Box2(new Vector2(-30, -30), new Vector2(30, 30)));
+      console.log('in box: ', boxedPoints.list);
       expect(boxedPoints.list.map((n) => n.toArray())).toEqual([[-30, -10], [10, -10], [30, 10], [-10, 10]]);
     });
   });

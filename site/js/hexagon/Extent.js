@@ -5,6 +5,8 @@ export default class Extent {
   constructor(list) {
     this.list = list.map(({ x, y }) => new Vector2(x, y));
     this._d = new Map();
+    this._d.set('x', _extent(this.list, 'x'));
+    this._d.set('y', _extent(this.list, 'y'));
   }
 
   dim(d) {
@@ -26,16 +28,23 @@ export default class Extent {
     return new Vector2(this.dim('x').mid, this.dim('y').mid);
   }
 
+  get absPoints() {
+    const min = this.minPt;
+
+    return this.list.map((p) => p.clone().sub(min));
+  }
+
   fitToBox(box) {
     const boxExtent = new Extent(box instanceof Vector2 ? [box, new Vector2()] : [box.min, box.max]);
-    console.log('new box extent from ', box, boxExtent);
     const offset = boxExtent.center.sub(this.center);
     const scalar = Math.min(
       boxExtent.dim('x').range / this.dim('x').range,
       boxExtent.dim('y').range / this.dim('y').range,
     );
-    console.log('scalar:', scalar, 'offset: ', offset);
-    return new Extent(this.list.map((a) => a.clone().add(offset).multiplyScalar(scalar)));
+    console.log('abs points:', this.absPoints);
+    const newPoints = this.absPoints.map((p) => p.multiplyScalar(scalar).add(boxExtent.minPt));
+
+    return new Extent(newPoints);
   }
 
   toBox2() {

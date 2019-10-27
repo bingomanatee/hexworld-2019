@@ -4,7 +4,6 @@ import { Store } from '@wonderlandlabs/looking-glass-engine';
 
 // eslint-disable-next-line prefer-destructuring
 const API_URL = process.env.API_URL;
-console.log('----- API_URL:', API_URL);
 
 const WorldStore = new Store({
   actions: {
@@ -22,7 +21,6 @@ const WorldStore = new Store({
     defineWorldClass(store, World) {
       store.actions.setWorldClass(World);
       World.store = store;
-      console.log('worldClass set to ', World);
     },
 
     updateWorld({ actions, state }, world) {
@@ -39,7 +37,6 @@ const WorldStore = new Store({
       try {
         const { data } = await axios.get(`${API_URL}/worlds/${id}`);
         // @TODO: examine schema
-        console.log('fetch', id, 'data ---', data);
         let heights = _.get(data, 'data');
         const { info } = data;
         try {
@@ -48,14 +45,12 @@ const WorldStore = new Store({
           world.store = store;
           store.state.worlds.set(id, world);
           await store.actions.setWorlds(store.state.worlds);
-          console.log('updated world', id, 'with heights', heights);
         } catch (err) {
           console.log('set worlds error', err);
         }
       } catch (err) {
         console.log('bad fetch', err);
       }
-      console.log('fetch done');
     },
 
     async load(store, purge = false) {
@@ -76,14 +71,12 @@ const WorldStore = new Store({
       actions.setWorlds(worlds);
     },
     async save(store, world) {
-      console.log('saving ', world.id, world.toJSON());
       let result;
       try {
         if (world.id) {
           result = await axios.put(`${API_URL}/worlds/${world.id}`, world.toJSON());
         } else {
           result = await axios.post(`${API_URL}/worlds`, world.toJSON());
-          console.log('save result: ', result);
           const id = _.get(result, 'data.id');
 
           // eslint-disable-next-line no-param-reassign
@@ -92,7 +85,6 @@ const WorldStore = new Store({
       } catch (err) {
         console.log('error saving', err);
       }
-      console.log('save result: ', result);
     },
 
     async deleteWorld(store, world) {

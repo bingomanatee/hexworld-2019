@@ -1,7 +1,11 @@
 import propper from '@wonderlandlabs/propper';
-import { Vector2 } from 'three';
+import { Vector2, Box2 } from 'three';
 import _ from 'lodash';
 import Extent from './Extent';
+
+const W_H_RATIO = Math.cos(Math.PI / 3);
+const rad60 = Math.PI / 3;
+const rad30 = Math.PI / 6;
 
 class Hexagon {
   constructor({
@@ -12,45 +16,44 @@ class Hexagon {
     this.scale = scale || 1;
     this.pointy = !!pointy;
   }
+
+  get points() {
+    if (this.pointy) {
+      return unitPointyHex.map((p) => p.clone().multiplyScalar(this.scale).add(new Vector2(this.x, this.y)));
+    }
+    return unitHex.map((p) => p.clone().multiplyScalar(this.scale).add(new Vector2(this.x, this.y)));
+  }
 }
 
-const W_H_RATIO = Math.cos(Math.PI / 3);
-
 Hexagon.inBox = (right, top, pointy = true, left = 0, bottom = 0) => {
-  const height = top - bottom;
-  let x = (top + bottom) / 2;
-  let y = (right + left) / 2;
-  const hr = height / 2;
-  const width = right - left;
-  const wr = width / 2;
-
-  let scale = hr;
-
-  if (pointy) {
-    if (hr * W_H_RATIO > wr) {
-      scale = wr;
-    }
-  } else if (wr * W_H_RATIO > hr) {
-    scale = wr;
-  }
-  x *= scale;
-  y *= scale;
+  console.log('hexagon in box: ', right, top, '/', left, bottom);
+  const platonicBox = pointy ? new Extent(unitPointyHex) : new Extent(unitHex);
+  const box = new Box2(new Vector2(left, bottom), new Vector2(right, top));
+  console.log('into box:', box);
+  const targetBox = platonicBox.fitToBox(box);
+  const { x, y } = targetBox.center;
+  const scale = targetBox.list.reduce((diam, pt) => {
+    const newDiam = pt.distanceTo(targetBox.list[0]);
+    return Math.max(newDiam, diam);
+  }, 0) / 2;
   return new Hexagon({
-    x,
-    y,
-    pointy,
-    scale,
+    x, y, pointy, scale,
   });
 };
 
 Hexagon.fromPoints = (points, box) => {
+  // work in progress
   const e = new Extent(points);
   const e2 = e.fitToBox(box);
   const pointy = e2.dim('x').range < e2.dim('y').range;
-};
+  const x = e2.dim('x').mid;
+  const y = e2.dim('y').mid;
+  const scale = e2.dim('x').range;
 
-const rad60 = Math.PI / 3;
-const rad30 = Math.PI / 6;
+  return new Hexagon({
+    x, y, scale, pointy,
+  });
+};
 
 const unitPointyHex = _.range(0, 6)
   .map((a) => new Vector2(
@@ -65,15 +68,15 @@ const unitHex = _.range(0, 6)
 
 propper(Hexagon)
   .addProp('x', {
-    type: 'integer',
+    type: 'number',
     defaultValue: 0,
   })
   .addProp('y', {
-    type: 'integer',
+    type: 'number',
     defaultValue: 0,
   })
   .addProp('scale', {
-    type: 'float',
+    type: 'number',
     defaultValue: 1,
   })
   .addProp('pointy', {

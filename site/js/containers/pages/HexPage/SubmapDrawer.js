@@ -89,11 +89,21 @@ class SubmapDrawer {
         color: 'blue',
       });
 
-      const hexes = new Hexagons(hex.scale/RADIUS,RADIUS * 2, true);
+    const scale = height / (2 * RADIUS);
 
-      const hir = hexes.within(RADIUS/2, RADIUS, RADIUS);
+    const hexes = new Hexagons(scale, RADIUS * 2, false);
+    const center = hexes.getTile(RADIUS / 2 + 1, RADIUS / 2 + 4);
+    console.log('scale---- ', scale, 'center:', center);
 
-/*    const Hex = Honeycomb.extendHex({
+    let hir;
+    try {
+      hir = hexes.withinHex(RADIUS / 2, center);
+    } catch (err) {
+      console.log('error in withinHex:', err);
+      return;
+    }
+
+    /*    const Hex = Honeycomb.extendHex({
       size: hex.scale / RADIUS,
       orientation: 'flat',
     });
@@ -107,7 +117,7 @@ class SubmapDrawer {
     // console.log('custom grid:', CustomGrid, 'area', area);
 
     const hir = area.hexesInRange(Hex(0, 0), RADIUS / 2);
-    console.log('hexes;', hir);*/
+    console.log('hexes;', hir); */
 
     hir.forEach((irhex) => {
       console.log('irhex:', irhex);

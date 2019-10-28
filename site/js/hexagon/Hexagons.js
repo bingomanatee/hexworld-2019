@@ -5,11 +5,13 @@ import HexGrid from 'hex-grid.js';
 import uuid from 'uuid/v4';
 import Hexagon, { W_H_RATIO } from './Hexagon';
 import {
-  ODD, roffset_to_cube, roffset_from_cube, hex_round, hex_lerp,
+  ODD, roffset_to_cube, roffset_from_cube, hex_round, hex_lerp, hex_distance,
+  qoffset_to_cube, qoffset_from_cube,
 } from './hexFn';
 
+const SQRT_3 = Math.sqrt(3)
 function pointy_hex_to_pixel(hex, size = 1) {
-  const x = size * (Math.sqrt(3) * hex.q + (Math.sqrt(3) / 2) * hex.r);
+  const x = size * ((SQRT_3 * hex.q + SQRT_3 / 2) * hex.r);
   const y = size * (3.0 / 2) * hex.r;
   return {
     x,
@@ -19,7 +21,7 @@ function pointy_hex_to_pixel(hex, size = 1) {
 
 function flat_hex_to_pixel(hex, size) {
   const x = size * (3.0 / 2) * hex.q;
-  const y = size * (Math.sqrt(3) / 2) * hex.q + (Math.sqrt(3) * hex.r);
+  var y = size * (SQRT_3/2 * hex.q  +  SQRT_3 * hex.r);
   return {
     x,
     y,
@@ -76,17 +78,13 @@ class Hexagons {
       col: y,
     };
     tile.position = this.grid.getPositionById(tile.id);
-    if (this.pointy) {
-      tile.x = W_H_RATIO * x * this.scale * 2;
-      tile.y = y * this.scale * 2;
-    } else {
-      throw new Error('write more code');
-    }
-    tile.cube = roffset_to_cube(ODD, tile.rc);
+    tile.cube = this.pointy ? roffset_to_cube(ODD, tile.rc) : qoffset_to_cube(ODD, tile.rc);
 
-    const pixel = this.pointy ? pointy_hex_to_pixel(tile.cube) : flat_hex_to_pixel(tile.cube);
-    tile.x = pixel.x * this.scale;
-    tile.y = pixel.y * this.scale;
+    const pixel = this.pointy ? pointy_hex_to_pixel(tile.cube, this.scale)
+      : flat_hex_to_pixel(tile.cube, this.scale);
+    console.log('--- pixel', pixel);
+    tile.x = pixel.x;
+    tile.y = pixel.y;
     return tile;
   }
 
@@ -114,11 +112,40 @@ class Hexagons {
       return 2;
     }
 
-    const midPoint = hex_round(hex_lerp(a.cube, b.cube, 0.5));
-    const { col, row } = roffset_from_cube(ODD, midPoint);
-    const hex = this.getTile(row, col);
+    try {
+      const midPoint = hex_round(hex_lerp(a.cube, b.cube, 0.5));
+      const { col, row } = this.pointy ? roffset_from_cube(ODD, midPoint, this.scale)
+        : qoffset_from_cube(ODD, midPoint, this.scale);
+      const hex = this.getTile(row, col);
+      return this.distance(a, hex) + this.distance(b, hex);
+    } catch (err) {
+      console.log('error in distance:', err);
+      return false;
+    }
+  }
 
-    return this.distance(a, hex) + this.distance(b, hex);
+  withinHex(n, center) {
+    if (!center) {
+      throw new Error('bad center');
+    }
+    const out = [];
+    const iter = this.grid.getTileIterator();
+
+    while (!iter.done) {
+      const t = this.process(iter.next());
+      if (!t) break;
+
+      try {
+        const dist = hex_distance(center.cube, t.cube);
+        if (dist <= n) {
+          out.push(t);
+        }
+      } catch (err) {
+        console.log('withinHex: error', err);
+      }
+    }
+
+    return out;
   }
 
   within(n, center, y) {

@@ -2,16 +2,17 @@ import propper from '@wonderlandlabs/propper';
 import _ from 'lodash';
 import SVG from 'svg.js';
 import { Box2, Vector2 } from 'three';
-
 import Perimeter from '../../../hexagon/Perimeter';
 import Hexagon from '../../../hexagon/Hexagon';
+import Hexagons from '../../../hexagon/Hexagons';
 import Extent from '../../../hexagon/Extent';
 
 function pointsToPoly(points) {
-  return points.map(({ x, y }) => `${x},${y}`).join(' ');
+  return points.map(({ x, y }) => `${Math.round(x)},${Math.round(y)}`)
+    .join(' ');
 }
 
-export default class SubmapDrawer {
+class SubmapDrawer {
   constructor(world, pointIndex) {
     this.pointIndex = pointIndex;
     this.world = world;
@@ -59,35 +60,68 @@ export default class SubmapDrawer {
       console.log('SubmapDrawer: missing ref, size');
       return;
     }
+    this.size = size;
+    console.log('setting svg to ', ref);
+    this.svg = ref;
     const { width, height } = size;
-
-    let draw;
-    console.log('drawing submap');
-    try {
-      draw = new SVG(ref).size(width, height);
-    } catch (err) {
-      console.log('error creating svg: ', err);
-      return;
-    }
-
-    try {
-      this.initPoints();
-    } catch (err) {
-      console.log('error in initPoints: ', err);
-      return;
-    }
 
     console.log('referencePoints: ', this._referencePoints);
     const ext = new Extent(this._referencePoints).fitToBox(new Box2(new Vector2(), new Vector2(width, height)));
 
     const str = pointsToPoly(ext.list);
     console.log('rendering points', ext, str);
-    draw.polygon(str).fill('yellow').stroke({ width: 10, color: 'red' });
+    this.drawer.polygon(str)
+      .fill('yellow')
+      .stroke({
+        width: 10,
+        color: 'red',
+      });
 
     const hex = Hexagon.inBox(width, height);
+    hex.x += (width - hex.width) / 2;
     const hStr = pointsToPoly(hex.points);
-    console.log('hex points: ', hStr);
-    draw.polygon(hStr).fill('rgba(0,0,0,0.5)').stroke({ width: 10, color: 'blue' });
+    console.log('hex:', hex, 'width:', hex.width);
+    const RADIUS = 20;
+    this.drawer.polygon(hStr)
+      .fill('rgba(0,0,0,0.5)')
+      .stroke({
+        width: 10,
+        color: 'blue',
+      });
+
+      const hexes = new Hexagons(hex.scale/RADIUS,RADIUS * 2, true);
+
+      const hir = hexes.within(RADIUS/2, RADIUS, RADIUS);
+
+/*    const Hex = Honeycomb.extendHex({
+      size: hex.scale / RADIUS,
+      orientation: 'flat',
+    });
+
+    console.log('custom grid:', CustomGrid);
+    const area = CustomGrid.rectangle(Hex({
+      width: RADIUS * 2,
+      height: RADIUS * 2,
+      start: Hex(1 - RADIUS, 1 - RADIUS),
+    }));
+    // console.log('custom grid:', CustomGrid, 'area', area);
+
+    const hir = area.hexesInRange(Hex(0, 0), RADIUS / 2);
+    console.log('hexes;', hir);*/
+
+    hir.forEach((irhex) => {
+      console.log('irhex:', irhex);
+      console.log('points:', irhex.points);
+
+      this.drawer.polygon(pointsToPoly(
+        irhex.points,
+      ))
+        .stroke({
+          width: 2,
+          color: 'green',
+        })
+        .fill('rgba(0,0,0,0)');
+    });
   }
 
   initPoints() {
@@ -107,7 +141,19 @@ propper(SubmapDrawer)
       this.initPoints();
     },
   })
-  .addProp('svg')
+  .addProp('drawer')
+  .addProp('svg', {
+    onChange(ref, old) {
+      console.log('svg change', ref, old);
+      if (ref && ref !== old) {
+        this.drawer = new SVG(ref);
+        console.log('set draw for ', this);
+        if (this.size) {
+          this.drawer.size(this.size.width, this.size.height);
+        }
+      }
+    },
+  })
   .addProp('world', {
     type: 'object',
     required: false,
@@ -115,3 +161,5 @@ propper(SubmapDrawer)
       this.initPoints();
     },
   });
+
+export default SubmapDrawer;

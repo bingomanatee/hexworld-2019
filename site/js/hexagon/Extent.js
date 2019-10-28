@@ -41,7 +41,6 @@ export default class Extent {
       boxExtent.dim('x').range / this.dim('x').range,
       boxExtent.dim('y').range / this.dim('y').range,
     );
-    console.log('abs points:', this.absPoints);
     const newPoints = this.absPoints.map((p) => p.multiplyScalar(scalar).add(boxExtent.minPt));
 
     return new Extent(newPoints);

@@ -3,9 +3,9 @@ import { Vector2, Box2 } from 'three';
 import _ from 'lodash';
 import Extent from './Extent';
 
-const W_H_RATIO = Math.cos(Math.PI / 3);
-const rad60 = Math.PI / 3;
-const rad30 = Math.PI / 6;
+export const W_H_RATIO = Math.sin(Math.PI / 3);
+export const rad60 = Math.PI / 3;
+export const rad30 = Math.PI / 6;
 
 class Hexagon {
   constructor({
@@ -18,16 +18,28 @@ class Hexagon {
   }
 
   get points() {
-    if (this.pointy) {
-      return unitPointyHex.map((p) => p.clone().multiplyScalar(this.scale).add(new Vector2(this.x, this.y)));
-    }
-    return unitHex.map((p) => p.clone().multiplyScalar(this.scale).add(new Vector2(this.x, this.y)));
+    return (this.pointy ? unitPointyHex : unitHex)
+      .map((p) => p.clone()
+        .multiplyScalar(this.scale)
+        .add(new Vector2(this.x, this.y)));
+  }
+
+  get pointsR() {
+    return this.points.map((p) => p.round());
+  }
+
+  get width() {
+    return this.scale * 2 * (this.pointy ? W_H_RATIO : 1);
+  }
+
+  get height() {
+    return this.scale * 2 * (!this.pointy ? W_H_RATIO : 1);
   }
 }
 
 Hexagon.inBox = (right, top, pointy = true, left = 0, bottom = 0) => {
   console.log('hexagon in box: ', right, top, '/', left, bottom);
-  const platonicBox = pointy ? new Extent(unitPointyHex) : new Extent(unitHex);
+  const platonicBox = new Extent(pointy ? unitPointyHex : unitHex);
   const box = new Box2(new Vector2(left, bottom), new Vector2(right, top));
   console.log('into box:', box);
   const targetBox = platonicBox.fitToBox(box);

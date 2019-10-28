@@ -13,7 +13,9 @@
     "watcherGlob": "**"
   },
   "jest": {
-    "testPathIgnorePatterns": ["/backend/"]
+    "testPathIgnorePatterns": [
+      "/backend/"
+    ]
   },
   "keywords": [],
   "author": "",
@@ -31,6 +33,8 @@
     "formik": "^1.5.8",
     "grommet": "^2.7.9",
     "grommet-icons": "^4.3.0",
+    "hex-grid": "^2.0.2",
+    "hex-grid.js": "^1.3.1",
     "http-proxy": "^1.18.0",
     "ioredis": "^4.14.1",
     "is_js": "^0.9.0",

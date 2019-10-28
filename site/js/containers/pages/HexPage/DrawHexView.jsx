@@ -25,10 +25,6 @@ export default withSize({
     constructor(props) {
       super(props);
       this.svgRef = React.createRef();
-      const { world, pointIndex } = props;
-      if (world && pointIndex) {
-        this.submapDrawer = new SubmapDrawer(world, Number.parseInt(pointIndex, 10));
-      }
     }
 
     componentDidMount() {
@@ -36,17 +32,24 @@ export default withSize({
     }
 
     componentDidUpdate() {
-      const { world, pointIndex } = this.props;
-      if (world && pointIndex) {
-        this.submapDrawer = new SubmapDrawer(world, Number.parseInt(pointIndex, 10));
-      }
       this.draw();
     }
 
     draw() {
+      const { world, pointIndex } = this.props;
+
+      if ((world && pointIndex)) {
+        if (!this.submapDrawer) {
+          this.submapDrawer = new SubmapDrawer(world, Number.parseInt(pointIndex, 10));
+        }
+      } else {
+        return;
+      }
+
       console.log('DrawHexView: drawing with ', this.svgRef);
       const current = _.get(this, 'svgRef.current');
       if (!current) return;
+      console.log('submapDrawer: ')
       this.submapDrawer.draw(current, this.props.size);
     }
 
